@@ -927,6 +927,8 @@ class History( object, Dictifiable, UsesAnnotations ):
         contents = chain()
         if 'datasets' in types:
             contents = chain(contents, self.__dataset_contents_iter(**kwds))
+        if 'collections' in types:
+            contents = chain(contents, self.__collection_contents_iter(**kwds))
         return contents
 
     def __dataset_contents_iter(self, **kwds):
@@ -956,6 +958,9 @@ class History( object, Dictifiable, UsesAnnotations ):
             return ifilter(python_filter, query)
         else:
             return query
+
+    def __collection_contents_iter( self, **kwds ):
+        return self.__filter_contents( HistoryDatasetCollectionAssociation, **kwds )
 
     def copy_tags_from(self,target_user,source_history):
         for src_shta in source_history.tags:
