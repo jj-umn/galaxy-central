@@ -19,6 +19,7 @@ import socket
 import time
 from string import Template
 from itertools import ifilter
+from itertools import chain
 
 import galaxy.datatypes
 import galaxy.datatypes.registry
@@ -919,24 +920,38 @@ class History( object, Dictifiable, UsesAnnotations ):
         """
         Fetch filtered list of contents of history.
         """
-        python_filter = None
+        default_contents_types = [
+            'datasets',
+        ]
+        types = kwds.get('types', default_contents_types)
+        contents = chain()
+        if 'datasets' in types:
+            contents = chain(contents, self.__dataset_contents_iter(**kwds))
+        return contents
+
+    def __dataset_contents_iter(self, **kwds):
+        return self.__filter_contents( HistoryDatasetAssociation, **kwds )
+
+    def __filter_contents( self, content_class, **kwds ):
         db_session = object_session( self )
         assert db_session != None
-        query = db_session.query( HistoryDatasetAssociation ).filter( HistoryDatasetAssociation.table.c.history_id == self.id )
-        query = query.order_by( HistoryDatasetAssociation.table.c.hid.asc() )
+        query = db_session.query( content_class ).filter( content_class.table.c.history_id == self.id )
+        if content_class == HistoryDatasetAssociation:
+            query = query.order_by( HistoryDatasetAssociation.table.c.hid.asc() )
+        python_filter = None
         deleted = galaxy.util.string_as_bool_or_none( kwds.get( 'deleted', None ) )
         if deleted is not None:
-            query = query.filter( HistoryDatasetAssociation.deleted == bool( kwds['deleted'] ) )
+            query = query.filter( content_class.deleted == bool( kwds['deleted'] ) )
         visible = galaxy.util.string_as_bool_or_none( kwds.get( 'visible', None ) )
         if visible is not None:
-            query = query.filter( HistoryDatasetAssociation.visible == bool( kwds['visible'] ) )
+            query = query.filter( content_class.visible == bool( kwds['visible'] ) )
         if 'ids' in kwds:
             ids = kwds['ids']
             max_in_filter_length = kwds.get('max_in_filter_length', MAX_IN_FILTER_LENGTH)
             if len(ids) < max_in_filter_length:
-                query = query.filter( HistoryDatasetAssociation.id.in_(ids) )
+                query = query.filter( content_class.id.in_(ids) )
             else:
-                python_filter = lambda hda: hda.id in ids
+                python_filter = lambda content: content.id in ids
         if python_filter:
             return ifilter(python_filter, query)
         else:
