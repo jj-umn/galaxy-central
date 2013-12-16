@@ -864,6 +864,13 @@ class UsesLibraryMixin:
 class UsesLibraryMixinItems( SharableItemSecurityMixin ):
 
     def get_library_folder( self, trans, id, check_ownership=False, check_accessible=True ):
+        # Eliminate any 'F' in front of the folder id. Just take the
+        # last 16 characters:
+        # There was a refactoring since I originally added this check that may have negated the
+        # need for this check, guess it is not hurting anything though...
+        if ( len( id ) >= 17 ):
+            id = id[-16:]
+
         return self.get_object( trans, id, 'LibraryFolder',
                                 check_ownership=False, check_accessible=check_accessible )
 
@@ -963,6 +970,14 @@ class UsesLibraryMixinItems( SharableItemSecurityMixin ):
         # finally, apply the new library_dataset to it's associated ldda (must be the same)
         security_agent.copy_library_permissions( trans, library_dataset, ldda )
         return security_agent.get_permissions( ldda )
+
+    def _decode_library_content_id( self, trans, content_id ):
+        if ( len( content_id ) % 16 == 0 ):
+            return 'LibraryDataset', content_id
+        elif ( content_id.startswith( 'F' ) ):
+            return 'LibraryFolder', content_id[1:]
+        else:
+            raise HTTPBadRequest( 'Malformed library content id ( %s ) specified, unable to decode.' % str( content_id ) )
 
 
 class UsesVisualizationMixin( UsesHistoryDatasetAssociationMixin, UsesLibraryMixinItems ):

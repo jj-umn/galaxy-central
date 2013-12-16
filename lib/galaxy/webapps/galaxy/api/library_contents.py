@@ -107,7 +107,7 @@ class LibraryContentsController( BaseAPIController, UsesLibraryMixin, UsesLibrar
             :func:`galaxy.model.LibraryDataset.to_dict` and
             :attr:`galaxy.model.LibraryFolder.dict_element_visible_keys`
         """
-        class_name, content_id = self.__decode_library_content_id( trans, id )
+        class_name, content_id = self._decode_library_content_id( trans, id )
         if class_name == 'LibraryFolder':
             content = self.get_library_folder( trans, content_id, check_ownership=False, check_accessible=True )
         else:
@@ -154,10 +154,8 @@ class LibraryContentsController( BaseAPIController, UsesLibraryMixin, UsesLibrar
         if 'folder_id' not in payload:
             trans.response.status = 400
             return "Missing requred 'folder_id' parameter."
-        else:
-            folder_id = payload.pop( 'folder_id' )
-            class_name, folder_id = self.__decode_library_content_id( trans, folder_id )
         try:
+            folder_id = payload.pop( 'folder_id' )
             # security is checked in the downstream controller
             parent = self.get_library_folder( trans, folder_id, check_ownership=False, check_accessible=False )
         except Exception, e:
@@ -310,15 +308,6 @@ class LibraryContentsController( BaseAPIController, UsesLibraryMixin, UsesLibrar
             trans.sa_session.add( assoc )
             trans.sa_session.flush()
 
-    def __decode_library_content_id( self, trans, content_id ):
-        if ( len( content_id ) % 16 == 0 ):
-            return 'LibraryDataset', content_id
-        elif ( content_id.startswith( 'F' ) ):
-            return 'LibraryFolder', content_id[1:]
-        else:
-            raise HTTPBadRequest( 'Malformed library content id ( %s ) specified, unable to decode.' % str( content_id ) )
-
-
     @web.expose_api
     def delete( self, trans, library_id, id, **kwd ):
         """
@@ -392,5 +381,3 @@ class LibraryContentsController( BaseAPIController, UsesLibraryMixin, UsesLibrar
             trans.response.status = 500
             rval.update({ 'error': str( exc ) })
         return rval
-
-        
