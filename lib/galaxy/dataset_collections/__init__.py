@@ -1,5 +1,6 @@
 from .registry import DatasetCollectionTypesRegistry
 
+from galaxy.exceptions import MessageException
 from galaxy.exceptions import ItemAccessibilityException
 from galaxy.exceptions import ActionInputError
 from galaxy.web.base.controller import SharableItemSecurityMixin
@@ -38,16 +39,20 @@ class DatasetCollectionsService(object, SharableItemSecurityMixin):
         type_plugin = self.__type_plugin( collection_type )
         dataset_collection = type_plugin.build_collection( dataset_instances )
         dataset_collection.name = name
-        if isinstance(parent, self.model.History):
+        if isinstance( parent, self.model.History ):
             dataset_collection_instance = self.model.HistoryDatasetCollectionAssociation(
                 collection=dataset_collection,
                 history=parent,
             )
-        elif isinstance(parent, self.model.LibraryFolder):
+        elif isinstance( parent, self.model.LibraryFolder ):
             dataset_collection_instance = self.model.LibraryDatasetCollectionAssociation(
                 collection=dataset_collection,
                 folder=parent,
             )
+        else:
+            message = "Internal logic error - create called with unknown parent type %s" % type( parent )
+            raise MessageException( message )
+
         return self.__persist( dataset_collection_instance )
 
     def __persist( self, dataset_collection_instance ):
