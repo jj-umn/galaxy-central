@@ -290,6 +290,7 @@
 
 <%
 from galaxy.tools.parameters import DataToolParameter, RuntimeValue
+from galaxy.tools.parameters import DataCollectionToolParameter
 from galaxy.jobs.actions.post import ActionBox
 import re
 import colorsys
@@ -360,7 +361,7 @@ if wf_parms:
     <div class="${cls}">
         <label>${param.get_label()}</label>
         <div>
-            %if isinstance( param, DataToolParameter ):
+            %if isinstance( param, DataToolParameter ) or isinstance( param, DataToolParameter ):
                 %if ( prefix + param.name ) in step.input_connections_by_name:
                     <%
                         conns = step.input_connections_by_name[ prefix + param.name ]

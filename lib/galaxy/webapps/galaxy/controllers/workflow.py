@@ -1172,7 +1172,7 @@ class WorkflowController( BaseUIController, SharableMixin, UsesStoredWorkflowMix
         return dict( ext_to_class_name=ext_to_class_name, class_to_classes=class_to_classes )
 
     @web.expose
-    def build_from_current_history( self, trans, job_ids=None, dataset_ids=None, workflow_name=None ):
+    def build_from_current_history( self, trans, job_ids=None, dataset_ids=None, dataset_collection_ids=None, workflow_name=None ):
         user = trans.get_user()
         history = trans.get_history()
         if not user:
@@ -1196,6 +1196,10 @@ class WorkflowController( BaseUIController, SharableMixin, UsesStoredWorkflowMix
                 dataset_ids = []
             elif type( dataset_ids ) is not list:
                 dataset_ids = [ dataset_ids ]
+            if dataset_collection_ids is None:
+                dataset_collection_ids = []
+            elif type( dataset_collection_ids) is not list:
+                dataset_collection_ids = [  dataset_collection_ids ]
             # Convert both sets of ids to integers
             job_ids = [ int( id ) for id in job_ids ]
             dataset_ids = [ int( id ) for id in dataset_ids ]
@@ -1211,6 +1215,12 @@ class WorkflowController( BaseUIController, SharableMixin, UsesStoredWorkflowMix
                 step = model.WorkflowStep()
                 step.type = 'data_input'
                 step.tool_inputs = dict( name="Input Dataset" )
+                hid_to_output_pair[ hid ] = ( step, 'output' )
+                steps.append( step )
+            for hid in dataset_collection_ids:
+                step = model.WorkflowStep()
+                step.type = 'data_collection_input'
+                step.tool_inputs = dict( name="Input Dataset Collection" )
                 hid_to_output_pair[ hid ] = ( step, 'output' )
                 steps.append( step )
             # Tool steps
@@ -1808,6 +1818,8 @@ def get_job_dict( trans ):
                 jobs[ job ].append( ( assoc.name, dataset ) )
             else:
                 jobs[ job ] = [ ( assoc.name, dataset ) ]
+    for dataset_collection in history.active_dataset_collections:
+        jobs[ FakeJob( dataset_collection ) ] = [ ( None, dataset_collection ) ]
     return jobs, warnings
 
 

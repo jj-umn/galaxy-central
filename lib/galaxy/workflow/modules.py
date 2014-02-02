@@ -194,6 +194,12 @@ class InputDataModule( InputModule ):
     default_name = "Input Dataset"
 
 
+class InputDataCollectionModule( InputModule ):
+    type = "data_collection_input"
+    name = "Input dataset collection"
+    default_name = "Input Dataset Collection"
+
+
 class ToolModule( WorkflowModule ):
 
     type = "tool"
@@ -446,4 +452,4 @@ class WorkflowModuleFactory( object ):
         type = step.type
         return self.module_types[type].from_workflow_step( trans, step )
 
-module_factory = WorkflowModuleFactory( dict( data_input=InputDataModule, tool=ToolModule ) )
+module_factory = WorkflowModuleFactory( dict( data_input=InputDataModule, data_collection_input=InputDataCollectionModule, tool=ToolModule ) )
