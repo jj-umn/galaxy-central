@@ -1911,6 +1911,10 @@ class HistoryDatasetAssociation( DatasetInstance, Dictifiable, UsesAnnotations, 
 
         return changed
 
+    @property
+    def history_content_type( self ):
+        return "dataset"
+
 
 class HistoryDatasetAssociationDisplayAtAuthorization( object ):
     def __init__( self, hda=None, user=None, site=None ):
@@ -2439,7 +2443,12 @@ class DatasetCollection( object,  Dictifiable, UsesAnnotations ):
         self.deleted = False
         #self.datasets = []
 
-    def validate(self):
+    @property
+    def state( self ):
+        # TODO: DatasetCollection state handling...
+        return 'ok'
+
+    def validate( self ):
         if self.collection_type is None:
             raise Exception("Each dataset collection must define a collection type.")
 
@@ -2465,7 +2474,7 @@ class DatasetCollectionInstance( object ):
         )
 
 
-class HistoryDatasetCollectionAssociation( DatasetCollectionInstance, Dictifiable ):
+class HistoryDatasetCollectionAssociation( DatasetCollectionInstance, Dictifiable, HasName ):
     """ Associates a DatasetCollection with a History. """
 
     def __init__(
@@ -2484,6 +2493,25 @@ class HistoryDatasetCollectionAssociation( DatasetCollectionInstance, Dictifiabl
         # TODO: Want visible?
         self.visible = visible
         self.deleted = deleted
+
+    @property
+    def state( self ):
+        return self.collection.state
+
+    @property
+    def hid( self ):
+        return self.id  # COMPLETLY WRONG, REPLACE WITH REAL HID
+
+    @property
+    def name( self ):
+        return self.collection.name
+
+    def display_name( self ):
+        return self.get_display_name()
+
+    @property
+    def history_content_type( self ):
+        return "dataset_collection"
 
     def to_dict( self, view='collection' ):
         dict_value = dict(
@@ -2563,6 +2591,10 @@ class DatasetInstanceDatasetCollectionAssociation( object, Dictifiable ):
             return self.ldda
         else:
             raise Exception( "Unknown dataset instance type %s" % dataset_instance_type )
+
+    @property
+    def dataset( self ):
+        return self.dataset_instance.dataset
 
 
 class Event( object ):

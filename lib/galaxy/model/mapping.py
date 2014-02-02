@@ -1349,9 +1349,33 @@ mapper( model.History, model.History.table,
     properties=dict( galaxy_sessions=relation( model.GalaxySessionToHistoryAssociation ),
                      datasets=relation( model.HistoryDatasetAssociation, backref="history", order_by=asc(model.HistoryDatasetAssociation.table.c.hid) ),
                      exports=relation( model.JobExportHistoryArchive, primaryjoin=( model.JobExportHistoryArchive.table.c.history_id == model.History.table.c.id ), order_by=desc( model.JobExportHistoryArchive.table.c.id ) ),
-                     active_datasets=relation( model.HistoryDatasetAssociation, primaryjoin=( ( model.HistoryDatasetAssociation.table.c.history_id == model.History.table.c.id ) & not_( model.HistoryDatasetAssociation.table.c.deleted ) ), order_by=asc( model.HistoryDatasetAssociation.table.c.hid ), viewonly=True ),
-                     visible_datasets=relation( model.HistoryDatasetAssociation, primaryjoin=( ( model.HistoryDatasetAssociation.table.c.history_id == model.History.table.c.id ) & not_( model.HistoryDatasetAssociation.table.c.deleted ) & model.HistoryDatasetAssociation.table.c.visible ),
-                     order_by=asc( model.HistoryDatasetAssociation.table.c.hid ), viewonly=True ),
+                     active_datasets=relation(
+                        model.HistoryDatasetAssociation,
+                        primaryjoin=(
+                            ( model.HistoryDatasetAssociation.table.c.history_id == model.History.table.c.id ) & not_( model.HistoryDatasetAssociation.table.c.deleted )
+                        ),
+                        order_by=asc( model.HistoryDatasetAssociation.table.c.hid ),
+                        viewonly=True
+                     ),
+                     active_dataset_collections=relation(
+                        model.HistoryDatasetCollectionAssociation,
+                        primaryjoin=(
+                            ( model.HistoryDatasetCollectionAssociation.table.c.history_id ) == model.History.table.c.id ) & not_( model.HistoryDatasetCollectionAssociation.table.c.deleted ),
+                        order_by=asc( model.HistoryDatasetCollectionAssociation.table.c.id ),
+                        viewonly=True,
+                     ),  # TODO:orderbyhid
+                     visible_datasets=relation(
+                        model.HistoryDatasetAssociation,
+                        primaryjoin=( ( model.HistoryDatasetAssociation.table.c.history_id == model.History.table.c.id ) & not_( model.HistoryDatasetAssociation.table.c.deleted ) & model.HistoryDatasetAssociation.table.c.visible ),
+                        order_by=asc( model.HistoryDatasetAssociation.table.c.hid ),
+                        viewonly=True,
+                     ),
+                     visible_dataset_collections=relation(
+                        model.HistoryDatasetCollectionAssociation,
+                        primaryjoin=( ( model.HistoryDatasetCollectionAssociation.table.c.history_id == model.History.table.c.id ) & not_( model.HistoryDatasetCollectionAssociation.table.c.deleted ) & model.HistoryDatasetCollectionAssociation.table.c.visible ),
+                        order_by=asc( model.HistoryDatasetCollectionAssociation.table.c.id ),
+                        viewonly=True,
+                     ),
                      tags=relation( model.HistoryTagAssociation, order_by=model.HistoryTagAssociation.table.c.id, backref="histories" ),
                      annotations=relation( model.HistoryAnnotationAssociation, order_by=model.HistoryAnnotationAssociation.table.c.id, backref="histories" ),
                      ratings=relation( model.HistoryRatingAssociation, order_by=model.HistoryRatingAssociation.table.c.id, backref="histories" ) )
